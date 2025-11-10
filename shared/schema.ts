@@ -1,18 +1,28 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
+export const votes = pgTable("votes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  nombre: text("nombre").notNull(),
+  rut: text("rut").notNull().unique(),
+  correo: text("correo").notNull(),
+  telefono: text("telefono").notNull(),
+  voteData: text("vote_data").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertVoteSchema = createInsertSchema(votes).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  rut: z.string().regex(/^[0-9]{7,8}-[0-9Kk]$/, "Formato de RUT inválido (ej: 12345678-9)"),
+  correo: z.string().email("Correo electrónico inválido"),
+  telefono: z.string().regex(/^\+?[0-9]{8,12}$/, "Teléfono inválido (8-12 dígitos)"),
+  voteData: z.string().min(1, "Debe incluir datos de votación"),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type InsertVote = z.infer<typeof insertVoteSchema>;
+export type Vote = typeof votes.$inferSelect;

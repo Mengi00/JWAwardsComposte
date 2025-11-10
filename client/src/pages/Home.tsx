@@ -1,15 +1,17 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import Hero from "@/components/Hero";
-import CategoryCard, { Artist } from "@/components/CategoryCard";
+import CategoryCard from "@/components/CategoryCard";
 import VoterForm, { VoterFormData } from "@/components/VoterForm";
 import VoteSummary from "@/components/VoteSummary";
 import SuccessMessage from "@/components/SuccessMessage";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { ChevronUp } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-//todo: remove mock functionality - Replace with real data from API
-const MOCK_CATEGORIES = [
+const CATEGORIES = [
   {
     id: "house",
     name: "Best House DJ",
@@ -106,6 +108,31 @@ export default function Home() {
   const [step, setStep] = useState<Step>("hero");
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [voterData, setVoterData] = useState<VoterFormData | null>(null);
+  const { toast } = useToast();
+
+  const submitVoteMutation = useMutation({
+    mutationFn: async (data: { votes: Record<string, string>; voterData: VoterFormData }) => {
+      const response = await apiRequest("POST", "/api/votes", {
+        nombre: data.voterData.nombre,
+        rut: data.voterData.rut,
+        correo: data.voterData.correo,
+        telefono: data.voterData.telefono,
+        voteData: JSON.stringify(data.votes),
+      });
+      return response;
+    },
+    onSuccess: () => {
+      setStep("success");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error al registrar voto",
+        description: error.message || "Hubo un problema al enviar tu voto. Por favor intenta nuevamente.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleStartVoting = () => {
     setStep("voting");
@@ -141,10 +168,9 @@ export default function Home() {
   };
 
   const handleConfirmVote = () => {
-    console.log("Vote confirmed:", { votes, voterData });
-    //todo: remove mock functionality - Send data to API
-    setStep("success");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (voterData) {
+      submitVoteMutation.mutate({ votes, voterData });
+    }
   };
 
   const handleBackToHome = () => {
@@ -158,9 +184,9 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const allCategoriesVoted = MOCK_CATEGORIES.every((cat) => votes[cat.id]);
+  const allCategoriesVoted = CATEGORIES.every((cat) => votes[cat.id]);
 
-  const voteSummary = MOCK_CATEGORIES.map((cat) => {
+  const voteSummary = CATEGORIES.map((cat) => {
     const artistId = votes[cat.id];
     const artist = cat.artists.find((a) => a.id === artistId);
     return {
@@ -195,7 +221,7 @@ export default function Home() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                {MOCK_CATEGORIES.map((category) => (
+                {CATEGORIES.map((category) => (
                   <CategoryCard
                     key={category.id}
                     category={category.name}
@@ -232,7 +258,7 @@ export default function Home() {
 
           {(step === "form" || step === "summary") && (
             <section id="form-section" className="py-16 px-4 bg-muted/20">
-              <VoterForm onSubmit={handleFormSubmit} />
+              <VoterForm onSubmit={handleFormSubmit} isLoading={submitVoteMutation.isPending} />
             </section>
           )}
 

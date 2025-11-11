@@ -1,18 +1,28 @@
+import { useQuery } from "@tanstack/react-query";
 import Hero from "@/components/Hero";
 import ParticipantsSection from "@/components/ParticipantsSection";
 import StatsSection from "@/components/StatsSection";
+import WinnersSection from "@/components/WinnersSection";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
+  const { data: settings } = useQuery<{ votingOpen: boolean }>({
+    queryKey: ["/api/settings"],
+  });
+
+  const votingOpen = settings?.votingOpen ?? true;
+
   return (
     <div className="min-h-screen">
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
 
-      <Hero />
+      <Hero votingOpen={votingOpen} />
 
       <ParticipantsSection />
+
+      {!votingOpen && <WinnersSection />}
 
       <StatsSection />
 

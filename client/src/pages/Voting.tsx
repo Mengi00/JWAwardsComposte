@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import CategoryCard from "@/components/CategoryCard";
 import VoterForm, { VoterFormData } from "@/components/VoterForm";
@@ -7,100 +7,11 @@ import VoteSummary from "@/components/VoteSummary";
 import SuccessMessage from "@/components/SuccessMessage";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, Home } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChevronUp, Home, Lock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-const CATEGORIES = [
-  {
-    id: "house",
-    name: "Best House DJ",
-    description: "El mejor DJ de House del año",
-    artists: [
-      { id: "house-1", name: "DJ Solar" },
-      { id: "house-2", name: "Midnight Echo" },
-      { id: "house-3", name: "Pulse Wave" },
-      { id: "house-4", name: "Neon Lights" },
-    ],
-  },
-  {
-    id: "techno",
-    name: "Best Techno DJ",
-    description: "El mejor DJ de Techno del año",
-    artists: [
-      { id: "techno-1", name: "Dark Matter" },
-      { id: "techno-2", name: "Industrial Pulse" },
-      { id: "techno-3", name: "Circuit Break" },
-      { id: "techno-4", name: "Analog Dreams" },
-    ],
-  },
-  {
-    id: "progressive",
-    name: "Best Progressive DJ",
-    description: "El mejor DJ de Progressive del año",
-    artists: [
-      { id: "prog-1", name: "Horizon" },
-      { id: "prog-2", name: "Skyline" },
-      { id: "prog-3", name: "Aurora" },
-      { id: "prog-4", name: "Elevation" },
-    ],
-  },
-  {
-    id: "melodic",
-    name: "Best Melodic Techno DJ",
-    description: "El mejor DJ de Melodic Techno del año",
-    artists: [
-      { id: "melodic-1", name: "Ethereal" },
-      { id: "melodic-2", name: "Cosmic Flow" },
-      { id: "melodic-3", name: "Deep Space" },
-      { id: "melodic-4", name: "Lunar Waves" },
-    ],
-  },
-  {
-    id: "bass",
-    name: "Best Bass DJ",
-    description: "El mejor DJ de Bass Music del año",
-    artists: [
-      { id: "bass-1", name: "SubWave" },
-      { id: "bass-2", name: "Heavy Drop" },
-      { id: "bass-3", name: "Bass Titan" },
-      { id: "bass-4", name: "Low Frequency" },
-    ],
-  },
-  {
-    id: "newcomer",
-    name: "Best Newcomer",
-    description: "El mejor DJ revelación del año",
-    artists: [
-      { id: "new-1", name: "Fresh Beat" },
-      { id: "new-2", name: "Rising Star" },
-      { id: "new-3", name: "New Wave" },
-      { id: "new-4", name: "Breakthrough" },
-    ],
-  },
-  {
-    id: "liveset",
-    name: "Best Live Set",
-    description: "El mejor set en vivo del año",
-    artists: [
-      { id: "live-1", name: "Live Energy" },
-      { id: "live-2", name: "Stage Master" },
-      { id: "live-3", name: "Crowd Control" },
-      { id: "live-4", name: "Festival King" },
-    ],
-  },
-  {
-    id: "djofyear",
-    name: "DJ of the Year",
-    description: "El mejor DJ del año en todas las categorías",
-    artists: [
-      { id: "dj-1", name: "Ultimate Mix" },
-      { id: "dj-2", name: "Champion Sound" },
-      { id: "dj-3", name: "Legendary" },
-      { id: "dj-4", name: "Icon" },
-    ],
-  },
-];
+import type { Category, Dj, DjCategory } from "@shared/schema";
 
 type Step = "voting" | "form" | "summary" | "success";
 
@@ -110,6 +21,47 @@ export default function Voting() {
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [voterData, setVoterData] = useState<VoterFormData | null>(null);
   const { toast } = useToast();
+
+  const { data: settings } = useQuery<{ votingOpen: boolean }>({
+    queryKey: ["/api/settings"],
+  });
+
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const { data: djs, isLoading: djsLoading } = useQuery<Dj[]>({
+    queryKey: ["/api/djs"],
+  });
+
+  const { data: djCategories, isLoading: assignmentsLoading } = useQuery<DjCategory[]>({
+    queryKey: ["/api/dj-categories"],
+  });
+
+  const votingOpen = settings?.votingOpen ?? true;
+
+  const categoriesWithArtists = useMemo(() => {
+    if (!categories || !djs || !djCategories) return [];
+
+    return categories.map(category => {
+      const categoryDjs = djCategories
+        .filter(assignment => assignment.categoryId === category.id)
+        .map(assignment => {
+          const dj = djs.find(d => d.id === assignment.djId);
+          return dj ? { id: dj.id, name: dj.name } : null;
+        })
+        .filter(Boolean) as { id: string; name: string }[];
+
+      return {
+        id: category.id,
+        name: category.name,
+        description: category.description,
+        artists: categoryDjs,
+      };
+    });
+  }, [categories, djs, djCategories]);
+
+  const isLoading = categoriesLoading || djsLoading || assignmentsLoading;
 
   const submitVoteMutation = useMutation({
     mutationFn: async (data: { votes: Record<string, string>; voterData: VoterFormData }) => {
@@ -175,9 +127,9 @@ export default function Voting() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const allCategoriesVoted = CATEGORIES.every((cat) => votes[cat.id]);
+  const allCategoriesVoted = categoriesWithArtists.every((cat) => votes[cat.id]);
 
-  const voteSummary = CATEGORIES.map((cat) => {
+  const voteSummary = categoriesWithArtists.map((cat) => {
     const artistId = votes[cat.id];
     const artist = cat.artists.find((a) => a.id === artistId);
     return {
@@ -188,6 +140,53 @@ export default function Voting() {
 
   if (step === "success") {
     return <SuccessMessage onBackToHome={handleBackToHome} />;
+  }
+
+  if (!votingOpen) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/20 px-4">
+        <div className="fixed top-4 right-4 z-50 flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleBackToHome}
+            className="border-4"
+            data-testid="button-back-home"
+          >
+            <Home className="w-5 h-5" />
+          </Button>
+          <ThemeToggle />
+        </div>
+        <Card className="w-full max-w-md border-4">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-muted flex items-center justify-center border-4 border-border">
+                <Lock className="w-8 h-8 text-muted-foreground" />
+              </div>
+            </div>
+            <CardTitle className="text-3xl font-black uppercase">
+              Votaciones Cerradas
+            </CardTitle>
+            <CardDescription className="text-base font-semibold">
+              El período de votación ha finalizado
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="mb-6 font-semibold text-muted-foreground">
+              Gracias por tu interés. Las votaciones para Johnnie Walker DJ Awards 2024 han sido cerradas.
+              Consulta los resultados en la página principal.
+            </p>
+            <Button
+              onClick={handleBackToHome}
+              className="font-black uppercase border-4"
+              data-testid="button-return-home"
+            >
+              Volver al Inicio
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -216,20 +215,38 @@ export default function Voting() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {CATEGORIES.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category.name}
-                description={category.description}
-                artists={category.artists}
-                selectedArtist={votes[category.id]}
-                onSelectArtist={(artistId) =>
-                  handleSelectArtist(category.id, artistId)
-                }
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="text-center py-16">
+              <p className="text-xl font-semibold text-muted-foreground">
+                Cargando categorías...
+              </p>
+            </div>
+          ) : categoriesWithArtists.length === 0 ? (
+            <div className="text-center py-16">
+              <Card className="max-w-md mx-auto border-4">
+                <CardContent className="pt-6">
+                  <p className="text-lg font-semibold text-muted-foreground">
+                    No hay categorías disponibles en este momento.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+              {categoriesWithArtists.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category.name}
+                  description={category.description}
+                  artists={category.artists}
+                  selectedArtist={votes[category.id]}
+                  onSelectArtist={(artistId) =>
+                    handleSelectArtist(category.id, artistId)
+                  }
+                />
+              ))}
+            </div>
+          )}
 
           {step === "voting" && (
             <div className="text-center">

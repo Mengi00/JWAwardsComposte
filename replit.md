@@ -4,16 +4,17 @@
 A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalist design with Johnnie Walker's signature gold, black, and red color scheme. Users can vote for their favorite electronic music DJs across 8 categories.
 
 ## Features
-- **Hero Section**: Full-screen hero with dramatic DJ festival imagery and geometric overlays
+- **Landing Page (/)**: Full-screen hero + participants gallery + live statistics
+- **Hero Section**: Dramatic DJ festival imagery with "VOTAR AHORA" button linking to voting page
 - **Participants Gallery**: Grid showcase of all 32 nominated DJs with professional photos and category labels
+- **Real-Time Statistics**: Live voting statistics with Recharts pie charts showing percentages, auto-refresh every 5 seconds
+- **Voting Page (/votar)**: Dedicated page for voting flow
 - **8 Voting Categories**: House, Techno, Progressive, Melodic Techno, Bass, Newcomer, Live Set, DJ of the Year
 - **Voter Registration**: Form capturing nombre, RUT (Chilean ID), correo electrónico, teléfono
 - **Vote Summary**: Review selections before submission
 - **RUT Validation**: Prevents duplicate votes by validating unique Chilean RUT numbers
 - **Dark/Light Mode**: Theme toggle with Johnnie Walker branding in both modes
 - **Success Confirmation**: Post-vote confirmation page with trophy imagery
-- **Real-Time Statistics**: Live voting statistics with Recharts pie charts showing percentages, auto-refresh every 5 seconds
-- **Single-Page Flow**: Continuous scroll experience from Hero → Participants → Voting → Statistics
 
 ## Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI
@@ -36,7 +37,7 @@ A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalis
 client/
   src/
     components/
-      Hero.tsx - Full-screen hero section
+      Hero.tsx - Full-screen hero section with link to voting page
       ParticipantsSection.tsx - Gallery of all 32 DJs with photos
       CategoryCard.tsx - Voting category with artist selection
       VoterForm.tsx - Registration form with RUT validation
@@ -45,7 +46,9 @@ client/
       SuccessMessage.tsx - Post-vote confirmation
       ThemeToggle.tsx - Dark/light mode switcher
     pages/
-      Home.tsx - Single-page continuous flow orchestration
+      Home.tsx - Landing page (Hero + Participants + Statistics)
+      Voting.tsx - Voting flow page (Categories + Form + Summary)
+      not-found.tsx - 404 page
 server/
   routes.ts - API endpoints for vote submission and statistics
   storage.ts - Vote storage interface
@@ -75,15 +78,20 @@ votes {
 ```
 
 ## User Flow
-1. Land on hero section
-2. Click "Votar Ahora" to start
-3. View all 32 participants in photo gallery
-4. Scroll to voting section and select favorite artist in each of 8 categories
-5. Fill out voter registration form (nombre, RUT, correo, teléfono)
-6. Review vote summary
-7. Confirm and submit
-8. See success message with trophy
-9. View live statistics with pie charts showing vote distribution
+
+### Landing Page (/)
+1. Land on hero section with "VOTAR AHORA" button
+2. Scroll down to view all 32 participants in photo gallery
+3. Continue scrolling to see live statistics with pie charts
+
+### Voting Page (/votar)
+1. Click "Votar Ahora" to navigate to voting page
+2. Select favorite artist in each of 8 categories
+3. Fill out voter registration form (nombre, RUT, correo, teléfono)
+4. Review vote summary
+5. Confirm and submit
+6. See success message with trophy
+7. Return to home page
 
 ## Validation Rules
 - **Nombre**: Minimum 2 characters
@@ -105,9 +113,12 @@ Application runs on port 5000 with Vite HMR.
 ✅ Dark/light mode theming
 ✅ Responsive design for mobile and desktop
 ✅ Real-time voting statistics with Recharts pie charts and auto-refresh (5s interval)
-✅ Single-page continuous scroll layout: Hero → Participants → Voting → Statistics
+✅ Two-page architecture: Landing page (/) and Voting page (/votar)
+✅ Landing page with Hero + Participants + Statistics
+✅ Dedicated voting page with complete flow
 ✅ Professional DJ photo gallery with 32 stock images mapped to nominees
 ✅ Percentage-based visualizations with legends and tooltips
+✅ Wouter routing for client-side navigation
 
 ## Deployment con Dokploy
 

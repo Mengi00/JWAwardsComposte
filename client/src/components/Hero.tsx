@@ -1,12 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import heroImage from "@assets/generated_images/DJ_performing_at_festival_56512bcb.png";
 import geometricPattern from "@assets/generated_images/Geometric_neobrutalist_pattern_e3b05fc9.png";
 
-interface HeroProps {
-  onStartVoting: () => void;
-}
-
-export default function Hero({ onStartVoting }: HeroProps) {
+export default function Hero() {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       <div 
@@ -41,14 +38,15 @@ export default function Hero({ onStartVoting }: HeroProps) {
           </p>
         </div>
 
-        <Button 
-          size="lg" 
-          onClick={onStartVoting}
-          className="text-xl px-16 py-8 font-black uppercase border-4 hover:scale-105 transition-transform"
-          data-testid="button-start-voting"
-        >
-          Votar Ahora
-        </Button>
+        <Link href="/votar" data-testid="link-start-voting">
+          <Button 
+            size="lg" 
+            className="text-xl px-16 py-8 font-black uppercase border-4 hover:scale-105 transition-transform"
+            data-testid="button-start-voting"
+          >
+            Votar Ahora
+          </Button>
+        </Link>
 
         <div className="absolute bottom-8 left-8 text-white/80 italic font-bold text-lg">
           Keep Walking

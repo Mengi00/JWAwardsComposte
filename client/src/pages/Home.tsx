@@ -139,7 +139,7 @@ export default function Home() {
   const handleStartVoting = () => {
     setStep("voting");
     setTimeout(() => {
-      document.getElementById("voting-section")?.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("participants-section")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   };
 
@@ -211,6 +211,8 @@ export default function Home() {
 
       {(step === "voting" || step === "form" || step === "summary") && (
         <>
+          <ParticipantsSection />
+
           <section id="voting-section" className="py-16 px-4">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
@@ -257,8 +259,6 @@ export default function Home() {
               )}
             </div>
           </section>
-
-          <ParticipantsSection />
 
           {(step === "form" || step === "summary") && (
             <section id="form-section" className="py-16 px-4 bg-muted/20">

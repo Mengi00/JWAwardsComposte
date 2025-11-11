@@ -5,13 +5,15 @@ A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalis
 
 ## Features
 - **Hero Section**: Full-screen hero with dramatic DJ festival imagery and geometric overlays
+- **Participants Gallery**: Grid showcase of all 32 nominated DJs with professional photos and category labels
 - **8 Voting Categories**: House, Techno, Progressive, Melodic Techno, Bass, Newcomer, Live Set, DJ of the Year
 - **Voter Registration**: Form capturing nombre, RUT (Chilean ID), correo electrónico, teléfono
 - **Vote Summary**: Review selections before submission
 - **RUT Validation**: Prevents duplicate votes by validating unique Chilean RUT numbers
 - **Dark/Light Mode**: Theme toggle with Johnnie Walker branding in both modes
 - **Success Confirmation**: Post-vote confirmation page with trophy imagery
-- **Real-Time Statistics**: Live voting statistics with auto-refresh every 5 seconds showing vote counts and percentages per artist in each category
+- **Real-Time Statistics**: Live voting statistics with Recharts pie charts showing percentages, auto-refresh every 5 seconds
+- **Single-Page Flow**: Continuous scroll experience from Hero → Participants → Voting → Statistics
 
 ## Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI
@@ -20,6 +22,7 @@ A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalis
 - **Routing**: Wouter
 - **Forms**: React Hook Form with Zod validation
 - **State Management**: TanStack Query
+- **Charts**: Recharts (Pie charts for statistics)
 
 ## Design System
 - **Colors**: Gold (#F5A623), Black (#0A0A0A), White (#FAFAFA), Red accent
@@ -34,18 +37,22 @@ client/
   src/
     components/
       Hero.tsx - Full-screen hero section
+      ParticipantsSection.tsx - Gallery of all 32 DJs with photos
       CategoryCard.tsx - Voting category with artist selection
       VoterForm.tsx - Registration form with RUT validation
       VoteSummary.tsx - Vote review before submission
+      StatsSection.tsx - Real-time pie charts with voting statistics
       SuccessMessage.tsx - Post-vote confirmation
       ThemeToggle.tsx - Dark/light mode switcher
     pages/
-      Home.tsx - Main voting flow orchestration
+      Home.tsx - Single-page continuous flow orchestration
 server/
-  routes.ts - API endpoints for vote submission
+  routes.ts - API endpoints for vote submission and statistics
   storage.ts - Vote storage interface
 shared/
   schema.ts - Database schema and Zod validators
+attached_assets/
+  stock_images/ - 32 DJ photos from stock image library
 ```
 
 ## API Endpoints
@@ -70,11 +77,13 @@ votes {
 ## User Flow
 1. Land on hero section
 2. Click "Votar Ahora" to start
-3. Select favorite artist in each of 8 categories
-4. Fill out voter registration form (nombre, RUT, correo, teléfono)
-5. Review vote summary
-6. Confirm and submit
-7. See success message with trophy
+3. View all 32 participants in photo gallery
+4. Scroll to voting section and select favorite artist in each of 8 categories
+5. Fill out voter registration form (nombre, RUT, correo, teléfono)
+6. Review vote summary
+7. Confirm and submit
+8. See success message with trophy
+9. View live statistics with pie charts showing vote distribution
 
 ## Validation Rules
 - **Nombre**: Minimum 2 characters
@@ -95,8 +104,10 @@ Application runs on port 5000 with Vite HMR.
 ✅ Complete end-to-end voting flow with confirmation
 ✅ Dark/light mode theming
 ✅ Responsive design for mobile and desktop
-✅ Real-time voting statistics with auto-refresh (5s interval)
-✅ Toggle between voting view and statistics view
+✅ Real-time voting statistics with Recharts pie charts and auto-refresh (5s interval)
+✅ Single-page continuous scroll layout: Hero → Participants → Voting → Statistics
+✅ Professional DJ photo gallery with 32 stock images mapped to nominees
+✅ Percentage-based visualizations with legends and tooltips
 
 ## Deployment con Dokploy
 

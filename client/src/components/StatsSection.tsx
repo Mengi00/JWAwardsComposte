@@ -1,104 +1,77 @@
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, Users } from "lucide-react";
+import { TrendingUp, Users, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Progress } from "@/components/ui/progress";
+import { useMemo } from "react";
 
-const CATEGORIES = [
-  {
-    id: "house",
-    name: "Best House DJ",
-    artists: [
-      { id: "house-1", name: "DJ Solar" },
-      { id: "house-2", name: "Midnight Echo" },
-      { id: "house-3", name: "Pulse Wave" },
-      { id: "house-4", name: "Neon Lights" },
-    ],
-  },
-  {
-    id: "techno",
-    name: "Best Techno DJ",
-    artists: [
-      { id: "techno-1", name: "Dark Matter" },
-      { id: "techno-2", name: "Industrial Pulse" },
-      { id: "techno-3", name: "Circuit Break" },
-      { id: "techno-4", name: "Analog Dreams" },
-    ],
-  },
-  {
-    id: "progressive",
-    name: "Best Progressive DJ",
-    artists: [
-      { id: "prog-1", name: "Horizon" },
-      { id: "prog-2", name: "Skyline" },
-      { id: "prog-3", name: "Aurora" },
-      { id: "prog-4", name: "Elevation" },
-    ],
-  },
-  {
-    id: "melodic",
-    name: "Best Melodic Techno DJ",
-    artists: [
-      { id: "melodic-1", name: "Ethereal" },
-      { id: "melodic-2", name: "Cosmic Flow" },
-      { id: "melodic-3", name: "Deep Space" },
-      { id: "melodic-4", name: "Lunar Waves" },
-    ],
-  },
-  {
-    id: "bass",
-    name: "Best Bass DJ",
-    artists: [
-      { id: "bass-1", name: "SubWave" },
-      { id: "bass-2", name: "Heavy Drop" },
-      { id: "bass-3", name: "Bass Titan" },
-      { id: "bass-4", name: "Low Frequency" },
-    ],
-  },
-  {
-    id: "newcomer",
-    name: "Best Newcomer",
-    artists: [
-      { id: "new-1", name: "Fresh Beat" },
-      { id: "new-2", name: "Rising Star" },
-      { id: "new-3", name: "New Wave" },
-      { id: "new-4", name: "Breakthrough" },
-    ],
-  },
-  {
-    id: "liveset",
-    name: "Best Live Set",
-    artists: [
-      { id: "live-1", name: "Live Energy" },
-      { id: "live-2", name: "Stage Master" },
-      { id: "live-3", name: "Crowd Control" },
-      { id: "live-4", name: "Festival King" },
-    ],
-  },
-  {
-    id: "djofyear",
-    name: "DJ of the Year",
-    artists: [
-      { id: "dj-1", name: "Ultimate Mix" },
-      { id: "dj-2", name: "Champion Sound" },
-      { id: "dj-3", name: "Legendary" },
-      { id: "dj-4", name: "Icon" },
-    ],
-  },
-];
+type Category = {
+  id: string;
+  name: string;
+  description: string;
+  order: number;
+};
 
-const COLORS = ["#F5A623", "#E63946", "#457B9D", "#2A9D8F", "#E76F51", "#264653", "#F4A261", "#E9C46A"];
+type DJ = {
+  id: string;
+  name: string;
+  photo: string | null;
+  bio: string | null;
+};
+
+type DJCategory = {
+  id: string;
+  djId: string;
+  categoryId: string;
+};
 
 interface CategoryStats {
   [categoryId: string]: {
-    [artistId: string]: number;
+    [djId: string]: number;
   };
 }
 
+type CategoryWithDJs = {
+  category: Category;
+  djs: DJ[];
+};
+
 export default function StatsSection() {
-  const { data: stats, isLoading } = useQuery<CategoryStats>({
+  const { data: stats, isLoading: statsLoading } = useQuery<CategoryStats>({
     queryKey: ["/api/stats"],
     refetchInterval: 5000,
   });
+
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const { data: djs = [], isLoading: djsLoading } = useQuery<DJ[]>({
+    queryKey: ["/api/djs"],
+  });
+
+  const { data: djCategories = [], isLoading: assignmentsLoading } = useQuery<DJCategory[]>({
+    queryKey: ["/api/dj-categories"],
+  });
+
+  const categoriesWithDJs = useMemo<CategoryWithDJs[]>(() => {
+    return [...categories]
+      .sort((a, b) => a.order - b.order)
+      .map((category) => {
+        const categoryDJIds = djCategories
+          .filter((dc) => dc.categoryId === category.id)
+          .map((dc) => dc.djId);
+        
+        const categoryDJs = djs.filter((dj) => categoryDJIds.includes(dj.id));
+        
+        return {
+          category,
+          djs: categoryDJs,
+        };
+      })
+      .filter((item) => item.djs.length > 0);
+  }, [categories, djs, djCategories]);
+
+  const isLoading = statsLoading || categoriesLoading || djsLoading || assignmentsLoading;
 
   if (isLoading) {
     return (
@@ -137,22 +110,24 @@ export default function StatsSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {CATEGORIES.map((category, categoryIndex) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {categoriesWithDJs.map(({ category, djs: categoryDJs }) => {
             const categoryStats = stats?.[category.id] || {};
             const categoryTotal = Object.values(categoryStats).reduce(
               (sum, votes) => sum + votes,
               0
             );
 
-            const chartData = category.artists
-              .map((artist) => ({
-                name: artist.name,
-                value: categoryStats[artist.id] || 0,
+            const djsWithVotes = categoryDJs
+              .map((dj) => ({
+                dj,
+                votes: categoryStats[dj.id] || 0,
+                percentage: categoryTotal > 0 ? ((categoryStats[dj.id] || 0) / categoryTotal) * 100 : 0,
               }))
-              .filter((item) => item.value > 0);
+              .sort((a, b) => b.votes - a.votes);
 
-            const hasVotes = chartData.length > 0;
+            const topDJ = djsWithVotes[0];
+            const hasVotes = categoryTotal > 0;
 
             return (
               <Card
@@ -160,90 +135,65 @@ export default function StatsSection() {
                 className="border-4 border-foreground bg-card p-6"
                 data-testid={`stats-category-${category.id}`}
               >
-                <div className="text-center mb-4">
-                  <h3 className="text-2xl font-black text-foreground mb-1 uppercase">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-black text-foreground mb-2 uppercase">
                     {category.name}
                   </h3>
+                  <div className="text-4xl font-black text-primary">
+                    {categoryTotal}
+                  </div>
                   <p className="text-sm text-muted-foreground font-bold">
-                    {categoryTotal} votos
+                    votos
                   </p>
                 </div>
 
-                {hasVotes ? (
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={chartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) =>
-                            `${name}: ${(percent * 100).toFixed(1)}%`
-                          }
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          strokeWidth={3}
-                          stroke="hsl(var(--foreground))"
-                        >
-                          {chartData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "4px solid hsl(var(--foreground))",
-                            borderRadius: 0,
-                            fontWeight: "bold",
-                          }}
-                          formatter={(value: number) => [`${value} votos`, "Votos"]}
-                        />
-                        <Legend
-                          wrapperStyle={{
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="h-80 flex items-center justify-center">
-                    <p className="text-muted-foreground font-bold text-center">
-                      No hay votos aún en esta categoría
+                {hasVotes && topDJ && topDJ.votes > 0 && (
+                  <div className="mb-6 p-4 border-4 border-primary bg-primary/5 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Trophy className="w-5 h-5 text-primary" />
+                      <span className="text-xs font-black text-muted-foreground uppercase">
+                        Líder
+                      </span>
+                    </div>
+                    <p className="font-black text-lg text-foreground uppercase">
+                      {topDJ.dj.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground font-bold">
+                      {topDJ.votes} votos ({topDJ.percentage.toFixed(1)}%)
                     </p>
                   </div>
                 )}
 
-                <div className="mt-6 space-y-2 border-t-4 border-foreground pt-4">
-                  {category.artists.map((artist) => {
-                    const votes = categoryStats[artist.id] || 0;
-                    const percentage =
-                      categoryTotal > 0 ? (votes / categoryTotal) * 100 : 0;
-
-                    return (
-                      <div
-                        key={artist.id}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="font-bold text-foreground">
-                          {artist.name}
+                <div className="space-y-4">
+                  {djsWithVotes.map(({ dj, votes, percentage }) => (
+                    <div key={dj.id} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-bold text-foreground truncate mr-2">
+                          {dj.name}
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <span className="font-black text-foreground">{votes}</span>
-                          <span className="text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             ({percentage.toFixed(1)}%)
                           </span>
                         </div>
                       </div>
-                    );
-                  })}
+                      <Progress
+                        value={percentage}
+                        className="h-2 border-2 border-foreground"
+                        data-testid={`progress-${dj.id}`}
+                      />
+                    </div>
+                  ))}
                 </div>
+
+                {!hasVotes && (
+                  <div className="py-8 flex items-center justify-center">
+                    <p className="text-muted-foreground font-bold text-center text-sm">
+                      No hay votos aún en esta categoría
+                    </p>
+                  </div>
+                )}
               </Card>
             );
           })}

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 const CATEGORIES = [
   {
@@ -85,6 +86,8 @@ const CATEGORIES = [
   },
 ];
 
+const COLORS = ["#F5A623", "#E63946", "#457B9D", "#2A9D8F", "#E76F51", "#264653", "#F4A261", "#E9C46A"];
+
 interface CategoryStats {
   [categoryId: string]: {
     [artistId: string]: number;
@@ -99,12 +102,14 @@ export default function StatsSection() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <TrendingUp className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-xl font-bold">Cargando estadísticas...</p>
+      <section className="py-16 px-4 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
+            <TrendingUp className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+            <p className="text-xl font-bold">Cargando estadísticas...</p>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -115,14 +120,14 @@ export default function StatsSection() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <section className="py-16 px-4 bg-background" id="stats-section">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <TrendingUp className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl sm:text-5xl font-black text-foreground uppercase">
+            <h2 className="text-4xl sm:text-5xl font-black text-foreground uppercase">
               Estadísticas en Vivo
-            </h1>
+            </h2>
           </div>
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Users className="w-5 h-5" />
@@ -133,78 +138,107 @@ export default function StatsSection() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {CATEGORIES.map((category) => {
+          {CATEGORIES.map((category, categoryIndex) => {
             const categoryStats = stats?.[category.id] || {};
             const categoryTotal = Object.values(categoryStats).reduce(
               (sum, votes) => sum + votes,
               0
             );
 
-            const sortedArtists = [...category.artists].sort((a, b) => {
-              const votesA = categoryStats[a.id] || 0;
-              const votesB = categoryStats[b.id] || 0;
-              return votesB - votesA;
-            });
+            const chartData = category.artists
+              .map((artist) => ({
+                name: artist.name,
+                value: categoryStats[artist.id] || 0,
+              }))
+              .filter((item) => item.value > 0);
+
+            const hasVotes = chartData.length > 0;
 
             return (
               <Card
                 key={category.id}
-                className="border-4 border-foreground bg-card p-6 hover-elevate"
+                className="border-4 border-foreground bg-card p-6"
                 data-testid={`stats-category-${category.id}`}
               >
-                <h2 className="text-2xl font-black text-foreground mb-2 uppercase">
-                  {category.name}
-                </h2>
-                <p className="text-sm text-muted-foreground mb-6 font-bold">
-                  {categoryTotal} votos
-                </p>
+                <div className="text-center mb-4">
+                  <h3 className="text-2xl font-black text-foreground mb-1 uppercase">
+                    {category.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground font-bold">
+                    {categoryTotal} votos
+                  </p>
+                </div>
 
-                <div className="space-y-4">
-                  {sortedArtists.map((artist, index) => {
+                {hasVotes ? (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) =>
+                            `${name}: ${(percent * 100).toFixed(1)}%`
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          strokeWidth={3}
+                          stroke="hsl(var(--foreground))"
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "4px solid hsl(var(--foreground))",
+                            borderRadius: 0,
+                            fontWeight: "bold",
+                          }}
+                          formatter={(value: number) => [`${value} votos`, "Votos"]}
+                        />
+                        <Legend
+                          wrapperStyle={{
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-80 flex items-center justify-center">
+                    <p className="text-muted-foreground font-bold text-center">
+                      No hay votos aún en esta categoría
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-6 space-y-2 border-t-4 border-foreground pt-4">
+                  {category.artists.map((artist) => {
                     const votes = categoryStats[artist.id] || 0;
                     const percentage =
                       categoryTotal > 0 ? (votes / categoryTotal) * 100 : 0;
-                    const isLeading = index === 0 && votes > 0;
 
                     return (
                       <div
                         key={artist.id}
-                        className="space-y-2"
-                        data-testid={`stats-artist-${artist.id}`}
+                        className="flex items-center justify-between text-sm"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {isLeading && (
-                              <TrendingUp className="w-4 h-4 text-primary" />
-                            )}
-                            <span
-                              className={`font-bold ${
-                                isLeading
-                                  ? "text-primary text-lg"
-                                  : "text-foreground"
-                              }`}
-                            >
-                              {artist.name}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-black text-lg text-foreground">
-                              {votes}
-                            </span>
-                            <span className="text-muted-foreground text-sm ml-2">
-                              ({percentage.toFixed(1)}%)
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="relative h-3 bg-muted border-2 border-foreground">
-                          <div
-                            className={`absolute inset-y-0 left-0 transition-all duration-500 ${
-                              isLeading ? "bg-primary" : "bg-accent"
-                            }`}
-                            style={{ width: `${percentage}%` }}
-                            data-testid={`stats-bar-${artist.id}`}
-                          />
+                        <span className="font-bold text-foreground">
+                          {artist.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-foreground">{votes}</span>
+                          <span className="text-muted-foreground">
+                            ({percentage.toFixed(1)}%)
+                          </span>
                         </div>
                       </div>
                     );
@@ -215,6 +249,6 @@ export default function StatsSection() {
           })}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

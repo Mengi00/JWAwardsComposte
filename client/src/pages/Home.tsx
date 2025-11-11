@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Hero from "@/components/Hero";
+import ParticipantsSection from "@/components/ParticipantsSection";
 import CategoryCard from "@/components/CategoryCard";
 import VoterForm, { VoterFormData } from "@/components/VoterForm";
 import VoteSummary from "@/components/VoteSummary";
@@ -8,7 +9,7 @@ import SuccessMessage from "@/components/SuccessMessage";
 import StatsSection from "@/components/StatsSection";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, TrendingUp, Vote } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -104,10 +105,8 @@ const CATEGORIES = [
 ];
 
 type Step = "hero" | "voting" | "form" | "summary" | "success";
-type View = "voting" | "stats";
 
 export default function Home() {
-  const [view, setView] = useState<View>("voting");
   const [step, setStep] = useState<Step>("hero");
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [voterData, setVoterData] = useState<VoterFormData | null>(null);
@@ -140,7 +139,7 @@ export default function Home() {
   const handleStartVoting = () => {
     setStep("voting");
     setTimeout(() => {
-      document.getElementById("voting-section")?.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("participants-section")?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   };
 
@@ -202,40 +201,9 @@ export default function Home() {
     return <SuccessMessage onBackToHome={handleBackToHome} />;
   }
 
-  if (view === "stats") {
-    return (
-      <div className="min-h-screen">
-        <div className="fixed top-4 right-4 z-50 flex gap-2">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setView("voting")}
-            className="border-4 font-black"
-            data-testid="button-view-voting"
-          >
-            <Vote className="w-5 h-5 mr-2" />
-            Votar
-          </Button>
-          <ThemeToggle />
-        </div>
-        <StatsSection />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen">
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => setView("stats")}
-          className="border-4 font-black"
-          data-testid="button-view-stats"
-        >
-          <TrendingUp className="w-5 h-5 mr-2" />
-          Estadísticas
-        </Button>
+      <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
 
@@ -243,6 +211,8 @@ export default function Home() {
 
       {(step === "voting" || step === "form" || step === "summary") && (
         <>
+          <ParticipantsSection />
+
           <section id="voting-section" className="py-16 px-4">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-16">
@@ -305,6 +275,8 @@ export default function Home() {
               />
             </section>
           )}
+
+          <StatsSection />
         </>
       )}
 

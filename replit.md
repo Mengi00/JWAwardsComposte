@@ -94,6 +94,189 @@ Application runs on port 5000 with Vite HMR.
 ✅ Dark/light mode theming
 ✅ Responsive design for mobile and desktop
 
+## Deployment con Dokploy
+
+### Requisitos Previos
+- Servidor con Docker y Docker Compose instalados
+- Dokploy configurado en tu servidor
+- Acceso SSH al servidor
+
+### Archivos de Configuración
+El proyecto incluye:
+- `Dockerfile` - Build multi-stage optimizado
+- `docker-compose.yml` - PostgreSQL + aplicación
+- `.dockerignore` - Optimización del build
+- `.env.example` - Variables de entorno requeridas
+
+### Pasos para Deployment
+
+#### 1. Preparar Variables de Entorno
+Copia `.env.example` a `.env` y configura:
+
+```bash
+# PostgreSQL Database Configuration
+POSTGRES_USER=djvoting
+POSTGRES_PASSWORD=tu_password_seguro_aqui
+POSTGRES_DB=djvoting
+POSTGRES_PORT=5432
+
+# Application Configuration
+APP_PORT=5000
+NODE_ENV=production
+
+# Database URL
+DATABASE_URL=postgresql://djvoting:tu_password_seguro_aqui@postgres:5432/djvoting
+
+# Session Secret (generar con: openssl rand -base64 32)
+SESSION_SECRET=tu_session_secret_aqui
+```
+
+#### 2. Deployment en Dokploy
+
+**Opción A: Usando Git Repository**
+1. Sube el código a tu repositorio Git (GitHub, GitLab, etc.)
+2. En Dokploy, crea una nueva aplicación
+3. Conecta tu repositorio
+4. Selecciona "Docker Compose" como tipo de deploy
+5. Configura las variables de entorno desde el panel de Dokploy
+6. Deploy automático
+
+**Opción B: Deployment Manual**
+1. Clona el repositorio en tu servidor:
+```bash
+git clone <tu-repo-url>
+cd djvoting
+```
+
+2. Copia y configura el archivo de entorno:
+```bash
+cp .env.example .env
+nano .env  # Edita las variables
+```
+
+3. Genera un SESSION_SECRET seguro:
+```bash
+openssl rand -base64 32
+```
+
+4. Ejecuta con Docker Compose:
+```bash
+docker-compose up -d
+```
+
+#### 3. Configurar Base de Datos
+El primer deploy, ejecuta las migraciones:
+
+```bash
+# Accede al contenedor de la aplicación
+docker exec -it djvoting-app sh
+
+# Ejecuta push del schema
+npm run db:push
+```
+
+#### 4. Verificar Deployment
+```bash
+# Ver logs
+docker-compose logs -f app
+
+# Verificar servicios
+docker-compose ps
+
+# Test de salud
+curl http://tu-dominio:5000/api/votes
+```
+
+### Configuración de Dokploy
+
+#### Variables de Entorno en Dokploy
+En el panel de Dokploy, configura estas variables:
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `NODE_ENV=production`
+
+#### Puertos y Dominio
+- Puerto de la aplicación: `5000`
+- Configura un dominio personalizado en Dokploy
+- Dokploy manejará automáticamente SSL/TLS
+
+### Mantenimiento
+
+#### Actualizar la Aplicación
+```bash
+# Pull nuevos cambios
+git pull origin main
+
+# Rebuild y restart
+docker-compose up -d --build
+```
+
+#### Backup de Base de Datos
+```bash
+# Crear backup
+docker exec djvoting-postgres pg_dump -U djvoting djvoting > backup.sql
+
+# Restaurar backup
+docker exec -i djvoting-postgres psql -U djvoting djvoting < backup.sql
+```
+
+#### Ver Logs
+```bash
+# Logs de la aplicación
+docker-compose logs -f app
+
+# Logs de PostgreSQL
+docker-compose logs -f postgres
+```
+
+#### Reiniciar Servicios
+```bash
+# Reiniciar solo la app
+docker-compose restart app
+
+# Reiniciar todo
+docker-compose restart
+```
+
+### Troubleshooting
+
+**Error de conexión a base de datos**
+- Verifica que `DATABASE_URL` esté correctamente configurado
+- Asegúrate que el servicio postgres esté healthy:
+  ```bash
+  docker-compose ps
+  ```
+
+**Puerto ya en uso**
+- Cambia `APP_PORT` en `.env`
+- Actualiza el mapping en `docker-compose.yml`
+
+**Build falla**
+- Verifica que node_modules esté en `.dockerignore`
+- Limpia cache de Docker:
+  ```bash
+  docker-compose down
+  docker system prune -a
+  docker-compose up -d --build
+  ```
+
+### Seguridad en Producción
+
+1. **Cambia todos los secretos** en `.env`
+2. **Usa contraseñas fuertes** para PostgreSQL
+3. **Configura firewall** para exponer solo puertos necesarios
+4. **Habilita SSL** en Dokploy para el dominio
+5. **Backups regulares** de la base de datos
+6. **Monitoreo** de logs para detectar actividad sospechosa
+
+### Recursos
+- PostgreSQL Data: Volume persistente `postgres_data`
+- Logs de aplicación: `./logs` (montado como volumen)
+- Network: `djvoting-network` (bridge)
+
 ## Future Enhancements
 - Admin dashboard for viewing vote statistics
 - Real-time vote count updates

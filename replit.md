@@ -11,6 +11,7 @@ A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalis
 - **RUT Validation**: Prevents duplicate votes by validating unique Chilean RUT numbers
 - **Dark/Light Mode**: Theme toggle with Johnnie Walker branding in both modes
 - **Success Confirmation**: Post-vote confirmation page with trophy imagery
+- **Real-Time Statistics**: Live voting statistics with auto-refresh every 5 seconds showing vote counts and percentages per artist in each category
 
 ## Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI
@@ -51,6 +52,7 @@ shared/
 - `POST /api/votes` - Submit a vote (validates RUT uniqueness)
 - `GET /api/votes/check/:rut` - Check if RUT has already voted
 - `GET /api/votes` - Get all votes (admin)
+- `GET /api/stats` - Get real-time voting statistics aggregated by category and artist
 
 ## Database Schema
 ```typescript
@@ -93,6 +95,8 @@ Application runs on port 5000 with Vite HMR.
 ✅ Complete end-to-end voting flow with confirmation
 ✅ Dark/light mode theming
 ✅ Responsive design for mobile and desktop
+✅ Real-time voting statistics with auto-refresh (5s interval)
+✅ Toggle between voting view and statistics view
 
 ## Deployment con Dokploy
 
@@ -278,8 +282,7 @@ docker-compose restart
 - Network: `djvoting-network` (bridge)
 
 ## Future Enhancements
-- Admin dashboard for viewing vote statistics
-- Real-time vote count updates
+- Admin dashboard with authentication
 - Email confirmation system
 - Anti-fraud measures beyond RUT validation
 - Vote editing within time window

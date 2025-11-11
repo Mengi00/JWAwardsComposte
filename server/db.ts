@@ -12,7 +12,10 @@ const getPoolConfig = () => {
       user: process.env.PGUSER,
       password: process.env.PGPASSWORD,
       database: process.env.PGDATABASE,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+      // Only use SSL for external databases (not local Docker postgres)
+      ssl: process.env.PGHOST !== 'postgres' && process.env.PGHOST !== 'localhost' && process.env.PGHOST !== '127.0.0.1'
+        ? { rejectUnauthorized: false }
+        : false
     };
   }
   
@@ -25,7 +28,10 @@ const getPoolConfig = () => {
   
   return {
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    // Only use SSL for external databases
+    ssl: process.env.PGHOST !== 'postgres' && process.env.PGHOST !== 'localhost' && process.env.PGHOST !== '127.0.0.1'
+      ? { rejectUnauthorized: false }
+      : false
   };
 };
 

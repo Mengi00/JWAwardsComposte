@@ -4,10 +4,10 @@
 A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalist design with Johnnie Walker's signature gold, black, and red color scheme. Users can vote for their favorite electronic music DJs across 8 categories.
 
 ## Features
-- **Landing Page (/)**: Full-screen hero + participants gallery + live statistics
+- **Landing Page (/)**: Full-screen hero + participants collage + live statistics
 - **Hero Section**: Dramatic DJ festival imagery with "VOTAR AHORA" button linking to voting page
-- **Participants Gallery**: Grid showcase of all 32 nominated DJs with professional photos and category labels
-- **Real-Time Statistics**: Live voting statistics with Recharts pie charts showing percentages, auto-refresh every 5 seconds
+- **Participants Collage**: Dynamic vertical stripe layout showing DJs grouped by category, fetched from database with hover effects revealing DJ names and bios
+- **Real-Time Statistics**: Simplified live voting statistics with big numbers, progress bars, and leader badges, auto-refresh every 5 seconds
 - **Voting Page (/votar)**: Dedicated page for voting flow
 - **8 Voting Categories**: House, Techno, Progressive, Melodic Techno, Bass, Newcomer, Live Set, DJ of the Year
 - **Voter Registration**: Form capturing nombre, RUT (Chilean ID), correo electrónico, teléfono
@@ -23,7 +23,7 @@ A voting platform for the Johnnie Walker DJ Awards 2024, featuring a neobrutalis
 - **Routing**: Wouter
 - **Forms**: React Hook Form with Zod validation
 - **State Management**: TanStack Query
-- **Charts**: Recharts (Pie charts for statistics)
+- **Visualizations**: Progress bars and simplified stats (no heavy charting libraries)
 
 ## Design System
 - **Colors**: Gold (#F5A623), Black (#0A0A0A), White (#FAFAFA), Red accent
@@ -38,11 +38,11 @@ client/
   src/
     components/
       Hero.tsx - Full-screen hero with voting status conditional button
-      ParticipantsSection.tsx - Gallery of all 32 DJs with photos
+      ParticipantsSection.tsx - Vertical stripe collage of DJs grouped by category from database
       CategoryCard.tsx - Voting category with artist selection
       VoterForm.tsx - Registration form with RUT validation
       VoteSummary.tsx - Vote review before submission
-      StatsSection.tsx - Real-time pie charts with voting statistics
+      StatsSection.tsx - Simplified real-time stats with progress bars and leader badges
       WinnersSection.tsx - Winners display (shown when voting closed)
       SuccessMessage.tsx - Post-vote confirmation
       ThemeToggle.tsx - Dark/light mode switcher
@@ -156,7 +156,7 @@ djCategories {
 ### Landing Page (/)
 1. Land on hero section with "VOTAR AHORA" button
 2. Scroll down to view all 32 participants in photo gallery
-3. Continue scrolling to see live statistics with pie charts
+3. Continue scrolling to see live statistics with progress bars and leader badges
 
 ### Voting Page (/votar)
 1. Click "Votar Ahora" to navigate to voting page
@@ -186,7 +186,7 @@ Application runs on port 5000 with Vite HMR.
 ✅ Complete end-to-end voting flow with confirmation
 ✅ Dark/light mode theming
 ✅ Responsive design for mobile and desktop
-✅ Real-time voting statistics with Recharts pie charts and auto-refresh (5s interval)
+✅ Real-time voting statistics with simplified progress bars and auto-refresh (5s interval)
 ✅ Two-page architecture: Landing page (/) and Voting page (/votar)
 ✅ Landing page with Hero + Participants + Statistics
 ✅ Dedicated voting page with complete flow

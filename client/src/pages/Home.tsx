@@ -28,9 +28,9 @@ export default function Home() {
 
       <footer className="border-t-4 border-border py-8 px-4 bg-background">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="font-black text-lg mb-2">JOHNNIE WALKER DJ AWARDS 2024</p>
+          <p className="font-black text-lg mb-2">Sistema de votaciones</p>
           <p className="text-sm text-muted-foreground font-semibold mb-4">
-            © 2024 Johnnie Walker. Todos los derechos reservados.
+            © Esto es una demo Todos los derechos reservados.
           </p>
           <p className="italic font-bold text-primary">Keep Walking</p>
         </div>

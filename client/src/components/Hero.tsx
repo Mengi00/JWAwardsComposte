@@ -26,7 +26,7 @@ export default function Hero({ votingOpen = true }: HeroProps) {
       <div className="relative h-full flex flex-col items-center justify-center px-4 text-center">
         <div className="mb-8">
           <h1 className="text-6xl md:text-8xl font-black text-primary mb-4 tracking-tight uppercase" style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.3)' }}>
-            JOHNNIE WALKER
+            Tu Marca Aqui
           </h1>
           <h2 className="text-4xl md:text-6xl font-black text-white mb-2 uppercase">
             DJ AWARDS 2024
@@ -60,7 +60,7 @@ export default function Hero({ votingOpen = true }: HeroProps) {
         )}
 
         <div className="absolute bottom-8 left-8 text-white/80 italic font-bold text-lg">
-          Keep Walking
+          Slogan
         </div>
       </div>
     </section>
